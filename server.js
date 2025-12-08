@@ -226,10 +226,10 @@ function findLocalFfmpeg(){
 }
 
 function createMux(id) {
-  const transcode = ((process.env.TRANSCODE || 'true') + '').toLowerCase() === 'true'
-  const scale = process.env.TRANSCODE_SCALE ? parseInt(process.env.TRANSCODE_SCALE,10) : 360
-  const fps = process.env.TRANSCODE_FPS ? parseInt(process.env.TRANSCODE_FPS,10) : 30
-  const bitrate = process.env.TRANSCODE_BITRATE ? (process.env.TRANSCODE_BITRATE+'') : '800k'
+  const transcode = ((process.env.TRANSCODE || 'false') + '').toLowerCase() === 'true'
+  const scale = process.env.TRANSCODE_SCALE ? parseInt(process.env.TRANSCODE_SCALE,10) : 720
+  const fps = process.env.TRANSCODE_FPS ? parseInt(process.env.TRANSCODE_FPS,10) : 60
+  const bitrate = process.env.TRANSCODE_BITRATE ? (process.env.TRANSCODE_BITRATE+'') : '3500k'
   const args = transcode ? [
     '-loglevel','error',
     '-fflags','+nobuffer+genpts',
