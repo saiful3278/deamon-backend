@@ -302,11 +302,11 @@
         const x = (e.clientX - rect.left) / rect.width
         const y = (e.clientY - rect.top) / rect.height
         const payload = JSON.stringify({ type:'touch', x, y })
-        ws.send(new Blob([payload]))
+        ws.send(payload)
       })
       window.addEventListener('keydown', (e) => {
         const payload = JSON.stringify({ type:'key', key:e.key })
-        ws.send(new Blob([payload]))
+        ws.send(payload)
       })
       function log(t){ try { console.log('[viewer]', t) } catch (_) {} try { const el = document.getElementById('log'); const p = document.createElement('div'); p.textContent = typeof t==='string'?t:JSON.stringify(t); el.appendChild(p); el.scrollTop = el.scrollHeight } catch (_) {} }
       function updateDiag(){

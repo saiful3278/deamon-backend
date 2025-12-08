@@ -307,6 +307,18 @@
         fetch('/device/'+id+'/stop', { method:'POST' }).catch(e=>log('stop error ' + e.message))
       }
 
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect()
+        const x = (e.clientX - rect.left) / rect.width
+        const y = (e.clientY - rect.top) / rect.height
+        const payload = JSON.stringify({ type:'touch', x, y })
+        ws.send(payload)
+      })
+      window.addEventListener('keydown', (e) => {
+        const payload = JSON.stringify({ type:'key', key:e.key })
+        ws.send(payload)
+      })
+
     </script>
   </body>
 </html>
