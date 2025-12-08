@@ -307,16 +307,78 @@
         fetch('/device/'+id+'/stop', { method:'POST' }).catch(e=>log('stop error ' + e.message))
       }
 
-      canvas.addEventListener('click', (e) => {
+      // Input Handling
+      function sendTouch(action, e) {
+        if (ws.readyState !== WebSocket.OPEN) return
         const rect = canvas.getBoundingClientRect()
-        const x = (e.clientX - rect.left) / rect.width
-        const y = (e.clientY - rect.top) / rect.height
-        const payload = JSON.stringify({ type:'touch', x, y })
-        ws.send(payload)
+        const ratioX = (e.clientX - rect.left) / rect.width
+        const ratioY = (e.clientY - rect.top) / rect.height
+        const w = canvas.width
+        const h = canvas.height
+        const x = Math.round(ratioX * w)
+        const y = Math.round(ratioY * h)
+        
+        const buf = new ArrayBuffer(32)
+        const view = new DataView(buf)
+        view.setUint8(0, 2) // INJECT_TOUCH_EVENT
+        view.setUint8(1, action) // 0:down, 1:up, 2:move
+        view.setBigUint64(2, 0n) // pointerId
+        view.setInt32(10, x)
+        view.setInt32(14, y)
+        view.setUint16(18, w)
+        view.setUint16(20, h)
+        view.setUint16(22, action === 1 ? 0 : 65535) // pressure
+        view.setInt32(24, 1) // actionButton: primary
+        view.setInt32(28, action === 1 ? 0 : 1) // buttons: primary
+        ws.send(buf)
+      }
+
+      canvas.addEventListener('mousedown', (e) => {
+        sendTouch(0, e) // DOWN
+        const onMove = (ev) => sendTouch(2, ev) // MOVE
+        const onUp = (ev) => {
+          sendTouch(1, ev) // UP
+          document.removeEventListener('mousemove', onMove)
+          document.removeEventListener('mouseup', onUp)
+        }
+        document.addEventListener('mousemove', onMove)
+        document.addEventListener('mouseup', onUp)
       })
+      
+      // Prevent context menu on right click
+      canvas.addEventListener('contextmenu', (e) => { e.preventDefault() })
+
+      const KEY_MAP = {
+        'Enter': 66, 'Backspace': 67, 'Escape': 111, 'Home': 3, 'ArrowUp': 19, 'ArrowDown': 20, 'ArrowLeft': 21, 'ArrowRight': 22,
+        'a': 29, 'b': 30, 'c': 31, 'd': 32, 'e': 33, 'f': 34, 'g': 35, 'h': 36, 'i': 37, 'j': 38, 'k': 39, 'l': 40, 'm': 41,
+        'n': 42, 'o': 43, 'p': 44, 'q': 45, 'r': 46, 's': 47, 't': 48, 'u': 49, 'v': 50, 'w': 51, 'x': 52, 'y': 53, 'z': 54,
+        ' ': 62, '0': 7, '1': 8, '2': 9, '3': 10, '4': 11, '5': 12, '6': 13, '7': 14, '8': 15, '9': 16
+      }
+      
       window.addEventListener('keydown', (e) => {
-        const payload = JSON.stringify({ type:'key', key:e.key })
-        ws.send(payload)
+        const code = KEY_MAP[e.key] || KEY_MAP[e.key.toLowerCase()]
+        if (!code) return
+        const buf = new ArrayBuffer(14)
+        const view = new DataView(buf)
+        view.setUint8(0, 0) // INJECT_KEYCODE
+        view.setUint8(1, 0) // DOWN
+        view.setInt32(2, code)
+        view.setInt32(6, 0) // repeat
+        view.setInt32(10, 0) // meta
+        ws.send(buf)
+      })
+      
+      window.addEventListener('keyup', (e) => {
+        const code = KEY_MAP[e.key] || KEY_MAP[e.key.toLowerCase()]
+        if (!code) return
+        const buf = new ArrayBuffer(14)
+        const view = new DataView(buf)
+        view.setUint8(0, 0) // INJECT_KEYCODE
+        view.setUint8(1, 1) // UP
+        view.setInt32(2, code)
+        view.setInt32(6, 0)
+        view.setInt32(10, 0)
+        ws.send(buf)
       })
 
     </script>
