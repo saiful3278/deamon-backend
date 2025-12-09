@@ -112,13 +112,20 @@ wss.on('connection', (ws) => {
             if (!d.mux || !d.mux.enabled) {
               try { d.mux = createMux(id) } catch (e) { d.mux = { enabled:false, write(){}, close(){}, get init(){ return null }, get initVersion(){ return 0 } } }
             }
-            d.pipeline = 'fmp4'
-            const modeMsg = JSON.stringify({ type:'mode', mode:'fmp4' })
-            for (const v of d.viewers) safeSend(v, modeMsg, false)
-            if (d.mux.enabled && d.mux.init) {
-              for (const v of d.viewers) { safeSend(v, d.mux.init, true); d.viewerInitVersion.set(v, d.mux.initVersion) }
+            if (d.mux && d.mux.enabled) {
+              d.pipeline = 'fmp4'
+              const modeMsg = JSON.stringify({ type:'mode', mode:'fmp4' })
+              for (const v of d.viewers) safeSend(v, modeMsg, false)
+              if (d.mux.init) {
+                for (const v of d.viewers) { safeSend(v, d.mux.init, true); d.viewerInitVersion.set(v, d.mux.initVersion) }
+              }
+              try { console.log('mode switch to fmp4 for', id) } catch (e) {}
+            } else {
+              d.pipeline = 'annexb'
+              const modeMsg = JSON.stringify({ type:'mode', mode:'annexb' })
+              for (const v of d.viewers) safeSend(v, modeMsg, false)
+              try { console.log('mux unavailable; fallback to annexb for', id) } catch (e) {}
             }
-            try { console.log('mode switch to fmp4 for', id) } catch (e) {}
             return
           } else if (msg && msg.type === 'mode' && msg.mode === 'annexb') {
             d.pipeline = 'annexb'
@@ -154,6 +161,7 @@ wss.on('connection', (ws) => {
       if (buf.length < 5) return
       const channel = buf.readUInt8(0)
       const length = buf.readUInt32BE(1)
+      if (5 + length > buf.length) return
       const payload = buf.slice(5, 5 + length)
       if (channel === 0) {
         const d = devices.get(id)

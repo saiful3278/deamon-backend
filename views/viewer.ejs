@@ -62,7 +62,7 @@
         log('ws open')
         ws.send(JSON.stringify({ type: 'viewer', id }))
         try { ws.send(JSON.stringify({ type:'mode', id, mode:'fmp4' })) } catch(_){ }
-        try { ws.send(JSON.stringify({ type:'request_init', id })) } catch(_){ }
+            // request init once on sourceopen; we already requested at ws open
       })
       ws.addEventListener('error', (e) => { log('ws error ' + e.message) })
       ws.addEventListener('close', () => { setWs(false); setStatus('Disconnected'); log('ws close') })
@@ -71,7 +71,7 @@
         if (typeof ev.data === 'string') {
           try {
             const msg = JSON.parse(ev.data)
-            if (msg.type === 'mode') { mode = 'fmp4'; setStatus('Mode: fmp4'); log('mode fmp4') }
+            if (msg.type === 'mode' && msg.mode) { mode = msg.mode; setStatus('Mode: ' + msg.mode); log('mode ' + msg.mode) }
           } catch (_) {}
         }
       })
@@ -94,6 +94,7 @@
       let rafId = null
       let msOpened = false
       let playStarted = false
+      let codecText = ''
       mediaSource.addEventListener('sourceopen', () => {
         msOpened = true
         try { mediaSource.duration = Infinity } catch(_){ }
@@ -308,7 +309,7 @@
         const x = Math.round(ratioX * w)
         const y = Math.round(ratioY * h)
         
-        const buf = new ArrayBuffer(32)
+        const buf = new ArrayBuffer(28)
         const view = new DataView(buf)
         view.setUint8(0, 2) // INJECT_TOUCH_EVENT
         view.setUint8(1, action) // 0:down, 1:up, 2:move
@@ -318,8 +319,7 @@
         view.setUint16(18, w)
         view.setUint16(20, h)
         view.setUint16(22, action === 1 ? 0 : 65535) // pressure
-        view.setInt32(24, 1) // actionButton: primary
-        view.setInt32(28, action === 1 ? 0 : 1) // buttons: primary
+        view.setInt32(24, action === 1 ? 0 : 1) // buttons: primary
         ws.send(buf)
       }
 
@@ -450,7 +450,7 @@
         }
         return iter(buf)
       }
-      function isInit(buf){ return !!findBox(buf, 'moov') }
+      function isInit(buf){ return !!findBox(buf, 'ftyp') && !!findBox(buf, 'moov') }
       function resetPlayer(){
         try { stopRender() } catch(_){ }
         queue = []
