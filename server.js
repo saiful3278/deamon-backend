@@ -55,6 +55,17 @@ app.post('/device/:id/stop', (req, res) => {
   res.json({ ok: true })
 })
 
+app.post('/device/:id/shell', (req, res) => {
+  const id = req.params.id
+  const d = devices.get(id)
+  if (!d) return res.status(404).json({ error: 'not found' })
+  const body = req.body || {}
+  const command = typeof body.command === 'string' ? body.command : ''
+  if (!command) return res.status(400).json({ error: 'invalid command' })
+  try { d.ws.send(JSON.stringify({ type: 'shell', command })) } catch (e) {}
+  res.json({ ok: true })
+})
+
 app.post('/start', (req, res) => {
   const body = req.body || {}
   const msg = JSON.stringify({ cmd: 'start', bitrate: body.bitrate || 3500000, maxSize: body.maxSize || 720, maxFps: body.maxFps || 60, audio: !!body.audio })

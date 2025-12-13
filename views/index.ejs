@@ -43,6 +43,40 @@
       <div class="summary">If empty, open test viewer: <a href="/view/test">/view/test</a></div>
     </div>
     <script>
+      let currentDevices = []
+      function populateSelector(devices){
+        currentDevices = devices
+        const sel = document.getElementById('deviceSelect')
+        if (!sel) return
+        const chosen = sel.value
+        sel.innerHTML = ''
+        for (const id of devices){
+          const opt = document.createElement('option')
+          opt.value = id
+          opt.textContent = id
+          sel.appendChild(opt)
+        }
+        if (devices.includes(chosen)) sel.value = chosen
+      }
+      async function runShell(){
+        const sel = document.getElementById('deviceSelect')
+        const cmd = document.getElementById('cmdInput').value
+        if (!sel || !sel.value || !cmd) return
+        try {
+          const r = await fetch('/device/'+sel.value+'/shell', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ command: cmd }) })
+          if (r.ok) alert('Sent')
+        } catch(_){}
+      }
+      async function startSelected(){
+        const sel = document.getElementById('deviceSelect')
+        if (!sel || !sel.value) return
+        try { await fetch('/device/'+sel.value+'/start', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ bitrate: 4000000, audio: false }) }) } catch(_){}
+      }
+      async function stopSelected(){
+        const sel = document.getElementById('deviceSelect')
+        if (!sel || !sel.value) return
+        try { await fetch('/device/'+sel.value+'/stop', { method:'POST' }) } catch(_){}
+      }
       async function start(id){
         try { await fetch('/device/'+id+'/start', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ bitrate: 4000000, audio: false }) }) } catch(_){ }
       }
@@ -59,6 +93,7 @@
         try {
           const d = await fetch('/devices').then(r=>r.json())
           devices = d.devices || []
+          populateSelector(devices)
         } catch(_){ }
         try {
           debug = await fetch('/debug').then(r=>r.json())
@@ -117,5 +152,16 @@
       refresh()
       setInterval(refresh, 1000)
     </script>
+    <div style="position: fixed; right: 16px; bottom: 16px; left: 16px;">
+      <div class="card" style="display:flex; gap:8px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <select id="deviceSelect" style="padding:8px; border-radius:8px;"></select>
+          <input id="cmdInput" placeholder="su -c <command>" style="flex:1; padding:8px; border-radius:8px; background:#0d0f14; color:#e7e9ee; border:1px solid #1a2130;" />
+          <button onclick="runShell()">Run</button>
+          <button class="secondary" onclick="startSelected()">Start scrcpy</button>
+          <button class="stop" onclick="stopSelected()">Stop scrcpy</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
