@@ -175,6 +175,9 @@ wss.on('connection', (ws) => {
           const d = devices.get(id)
           if (d && msg && msg.type === 'status') {
             try { console.log('apk status', id, msg.level || 'info', msg.msg || '') } catch (e) {}
+            for (const v of d.viewers) {
+              try { v.send(JSON.stringify(msg)) } catch (e) {}
+            }
           }
         } catch (e) {}
         return
