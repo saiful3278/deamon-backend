@@ -42,7 +42,7 @@ app.post('/device/:id/start', (req, res) => {
   const d = devices.get(id)
   if (!d) return res.status(404).json({ error: 'not found' })
   const body = req.body || {}
-  const msg = JSON.stringify({ cmd: 'start', bitrate: body.bitrate || 3500000, maxSize: body.maxSize || 720, maxFps: body.maxFps || 60, audio: !!body.audio })
+  const msg = JSON.stringify({ cmd: 'start', bitrate: body.bitrate || 3500000, maxSize: body.maxSize || 720, maxFps: body.maxFps || 60, audio: !!body.audio, command: `su -c "cp /data/data/com.sam.deamon_apk/files/scrcpy-server-v3.3.3 /data/local/tmp/scrcpy-server-v3.3.3 && chmod 755 /data/local/tmp/scrcpy-server-v3.3.3 && setsid CLASSPATH=/data/local/tmp/scrcpy-server-v3.3.3 /system/bin/app_process64 / com.genymobile.scrcpy.Server 3.3.3 video_bit_rate=${body.bitrate || 3500000} max_size=${body.maxSize || 720} max_fps=${body.maxFps || 60} raw_stream=true send_device_meta=false send_frame_meta=false send_dummy_byte=false send_codec_meta=false scid=00000000 audio=${!!body.audio} clipboard_autosync=false" &` })
   try { d.ws.send(msg) } catch (e) {}
   res.json({ ok: true })
 })
@@ -68,7 +68,7 @@ app.post('/device/:id/shell', (req, res) => {
 
 app.post('/start', (req, res) => {
   const body = req.body || {}
-  const msg = JSON.stringify({ cmd: 'start', bitrate: body.bitrate || 3500000, maxSize: body.maxSize || 720, maxFps: body.maxFps || 60, audio: !!body.audio })
+  const msg = JSON.stringify({ cmd: 'start', bitrate: body.bitrate || 3500000, maxSize: body.maxSize || 720, maxFps: body.maxFps || 60, audio: !!body.audio, command: `su -c "cp /data/data/com.sam.deamon_apk/files/scrcpy-server-v3.3.3 /data/local/tmp/scrcpy-server-v3.3.3 && chmod 755 /data/local/tmp/scrcpy-server-v3.3.3 && setsid CLASSPATH=/data/local/tmp/scrcpy-server-v3.3.3 /system/bin/app_process64 / com.genymobile.scrcpy.Server 3.3.3 video_bit_rate=${body.bitrate || 3500000} max_size=${body.maxSize || 720} max_fps=${body.maxFps || 60} raw_stream=true send_device_meta=false send_frame_meta=false send_dummy_byte=false send_codec_meta=false scid=00000000 audio=${!!body.audio} clipboard_autosync=false" &` })
   for (const [, d] of devices) { try { d.ws.send(msg) } catch (e) {} }
   res.json({ ok: true })
 })
