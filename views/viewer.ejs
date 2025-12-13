@@ -48,6 +48,15 @@
         <button id="start">Start Stream</button>
         <button id="stop">Stop Stream</button>
       </div>
+      <div id="deviceSwitch" style="display:flex; gap:8px; align-items:center;">
+        <label for="deviceSel">Device</label>
+        <select id="deviceSel"></select>
+        <button id="switchBtn">Switch</button>
+      </div>
+      <div id="term" style="width:min(96vw,600px); display:flex; gap:8px; align-items:center;">
+        <input id="cmdInput" placeholder="su command" style="flex:1; padding:8px; border-radius:8px; border:none; background:#111; color:#e7e9ee;" />
+        <button id="runCmd">Run</button>
+      </div>
       <canvas id="canvas"></canvas>
       <div id="log"></div>
     </div>
@@ -72,6 +81,7 @@
           try {
             const msg = JSON.parse(ev.data)
             if (msg.type === 'mode' && msg.mode) { mode = msg.mode; setStatus('Mode: ' + msg.mode); log('mode ' + msg.mode) }
+            else if (msg.type === 'status' && msg.msg) { log(msg.msg) }
           } catch (_) {}
         }
       })
@@ -297,6 +307,34 @@
         log('stop clicked')
         fetch('/device/'+id+'/stop', { method:'POST' }).catch(e=>log('stop error ' + e.message))
       }
+      async function loadDevices(){
+        try {
+          const d = await fetch('/devices').then(r=>r.json())
+          const sel = document.getElementById('deviceSel')
+          sel.innerHTML = ''
+          for (const dev of (d.devices||[])){
+            const opt = document.createElement('option')
+            opt.value = dev
+            opt.textContent = dev
+            if (dev === id) opt.selected = true
+            sel.appendChild(opt)
+          }
+        } catch(_){ }
+      }
+      document.getElementById('switchBtn').onclick = () => {
+        const sel = document.getElementById('deviceSel')
+        const target = sel.value
+        if (target && target !== id) location.href = '/view/' + encodeURIComponent(target)
+      }
+      document.getElementById('runCmd').onclick = () => {
+        const inp = document.getElementById('cmdInput')
+        const cmd = inp.value || ''
+        if (!cmd) return
+        if (ws.readyState !== WebSocket.OPEN) { log('ws not open'); return }
+        try { ws.send(JSON.stringify({ type:'shell', id, command: cmd })) } catch(_){}
+        log('sent: ' + cmd)
+      }
+      loadDevices()
 
       // Input Handling
       function sendTouch(action, e) {
@@ -309,7 +347,7 @@
         const x = Math.round(ratioX * w)
         const y = Math.round(ratioY * h)
         
-        const buf = new ArrayBuffer(28)
+        const buf = new ArrayBuffer(32)
         const view = new DataView(buf)
         view.setUint8(0, 2) // INJECT_TOUCH_EVENT
         view.setUint8(1, action) // 0:down, 1:up, 2:move
@@ -319,7 +357,8 @@
         view.setUint16(18, w)
         view.setUint16(20, h)
         view.setUint16(22, action === 1 ? 0 : 65535) // pressure
-        view.setInt32(24, action === 1 ? 0 : 1) // buttons: primary
+        view.setInt32(24, action === 1 ? 0 : 1)
+        view.setInt32(28, action === 1 ? 0 : 1)
         ws.send(buf)
       }
 

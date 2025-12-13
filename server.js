@@ -1,12 +1,23 @@
 const express = require('express')
 const http = require('http')
+const https = require('https')
 const path = require('path')
 const { WebSocketServer } = require('ws')
 const { spawn } = require('child_process')
 const fs = require('fs')
 
 const app = express()
-const server = http.createServer(app)
+const SSL_KEY_PATH = process.env.SSL_KEY_PATH || ''
+const SSL_CERT_PATH = process.env.SSL_CERT_PATH || ''
+let server
+if (SSL_KEY_PATH && SSL_CERT_PATH) {
+  let key = null, cert = null
+  try { key = fs.readFileSync(SSL_KEY_PATH) } catch (e) {}
+  try { cert = fs.readFileSync(SSL_CERT_PATH) } catch (e) {}
+  server = (key && cert) ? https.createServer({ key, cert }, app) : http.createServer(app)
+} else {
+  server = http.createServer(app)
+}
 const wss = new WebSocketServer({ server, path: '/ws' })
 
 app.set('view engine', 'ejs')
@@ -31,7 +42,7 @@ app.post('/device/:id/start', (req, res) => {
   const d = devices.get(id)
   if (!d) return res.status(404).json({ error: 'not found' })
   const body = req.body || {}
-  const msg = JSON.stringify({ cmd: 'start', bitrate: body.bitrate || 3500000, maxSize: body.maxSize || 720, maxFps: body.maxFps || 60, audio: !!body.audio, command: `su -c "cp /sdcard/Documents/scrcpy-server-v3.3.3 /data/local/tmp/ && chmod 755 /data/local/tmp/scrcpy-server-v3.3.3 && CLASSPATH=/data/local/tmp/scrcpy-server-v3.3.3 /system/bin/app_process64 / com.genymobile.scrcpy.Server 3.3.3 video_bit_rate=${body.bitrate || 3500000} max_size=${body.maxSize || 720} max_fps=${body.maxFps || 60} raw_stream=true send_device_meta=false send_frame_meta=false send_dummy_byte=false send_codec_meta=false scid=00000000 audio=${!!body.audio} clipboard_autosync=false" &` })
+  const msg = JSON.stringify({ cmd: 'start', bitrate: body.bitrate || 3500000, maxSize: body.maxSize || 720, maxFps: body.maxFps || 60, audio: !!body.audio })
   try { d.ws.send(msg) } catch (e) {}
   res.json({ ok: true })
 })
@@ -46,7 +57,7 @@ app.post('/device/:id/stop', (req, res) => {
 
 app.post('/start', (req, res) => {
   const body = req.body || {}
-  const msg = JSON.stringify({ cmd: 'start', bitrate: body.bitrate || 3500000, maxSize: body.maxSize || 720, maxFps: body.maxFps || 60, audio: !!body.audio, command: `su -c "cp /sdcard/Documents/scrcpy-server-v3.3.3 /data/local/tmp/ && chmod 755 /data/local/tmp/scrcpy-server-v3.3.3 && CLASSPATH=/data/local/tmp/scrcpy-server-v3.3.3 /system/bin/app_process64 / com.genymobile.scrcpy.Server 3.3.3 video_bit_rate=${body.bitrate || 3500000} max_size=${body.maxSize || 720} max_fps=${body.maxFps || 60} raw_stream=true send_device_meta=false send_frame_meta=false send_dummy_byte=false send_codec_meta=false scid=00000000 audio=${!!body.audio} clipboard_autosync=false" &` })
+  const msg = JSON.stringify({ cmd: 'start', bitrate: body.bitrate || 3500000, maxSize: body.maxSize || 720, maxFps: body.maxFps || 60, audio: !!body.audio })
   for (const [, d] of devices) { try { d.ws.send(msg) } catch (e) {} }
   res.json({ ok: true })
 })
@@ -144,6 +155,7 @@ wss.on('connection', (ws) => {
           }
         } catch (e) {}
       }
+      try { console.log('viewer control', id, Buffer.isBuffer(data) ? data.length : 0) } catch (e) {}
       safeSend(d.ws, data, isBinary)
     } else if (role === 'device') {
       if (!isBinary) {

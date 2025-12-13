@@ -318,7 +318,7 @@
         const x = Math.round(ratioX * w)
         const y = Math.round(ratioY * h)
         
-        const buf = new ArrayBuffer(28)
+        const buf = new ArrayBuffer(32)
         const view = new DataView(buf)
         view.setUint8(0, 2) // INJECT_TOUCH_EVENT
         view.setUint8(1, action) // 0:down, 1:up, 2:move
@@ -328,7 +328,8 @@
         view.setUint16(18, w)
         view.setUint16(20, h)
         view.setUint16(22, action === 1 ? 0 : 65535) // pressure
-        view.setInt32(24, action === 1 ? 0 : 1) // buttons: primary
+        view.setInt32(24, action === 1 ? 0 : 1)
+        view.setInt32(28, action === 1 ? 0 : 1)
         ws.send(buf)
       }
 
