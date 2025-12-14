@@ -117,8 +117,13 @@ wss.on('connection', (ws) => {
             const modeMsg = JSON.stringify({ type:'mode', mode: currentMode })
             ws.send(modeMsg)
             try { console.log('viewer connect', id, 'mode', currentMode) } catch (e) {}
+            
+            // Immediately send init segment if available
+            if (currentMode === 'fmp4' && d.mux.enabled && d.mux.init) {
+                 safeSend(ws, d.mux.init, true)
+                 d.viewerInitVersion.set(ws, d.mux.initVersion)
+            }
           } catch (e) {}
-          if (d.pipeline === 'fmp4' && d.mux.enabled && d.mux.init) safeSend(ws, d.mux.init, true)
           ws.on('close', () => d.viewers.delete(ws))
           return
         }
@@ -296,7 +301,6 @@ function createMux(id) {
     '-fflags','+nobuffer+genpts',
     '-use_wallclock_as_timestamps','1',
     '-flush_packets','1',
-    '-max_interleave_delta','0',
     '-f','h264','-i','pipe:0',
     '-c','copy',
     '-muxdelay','0','-muxpreload','0',

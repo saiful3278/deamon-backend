@@ -140,7 +140,12 @@
         try { mediaSource.duration = Infinity } catch(_){ }
         log('media source open')
         updateDiag()
-        try { ws.send(JSON.stringify({ type:'request_init', id })) } catch(_){ }
+        // If we are late to the party, the init might have been sent before sourceopen.
+        // We rely on the queue to hold it.
+        // But also request it again to be safe if queue is empty?
+        if (ws.readyState === WebSocket.OPEN && queue.length === 0) {
+             try { ws.send(JSON.stringify({ type:'request_init', id })) } catch(_){ }
+        }
       })
       mediaSource.addEventListener('sourceended', () => { log('media source ended'); resetPlayer() })
       mediaSource.addEventListener('sourceclose', () => log('media source close'))
