@@ -97,7 +97,10 @@
         const out = document.getElementById('termOut')
         const span = document.createElement('span')
         span.textContent = s
+        span.style.opacity = '0'
+        span.style.transition = 'opacity 0.1s ease-out'
         out.appendChild(span)
+        requestAnimationFrame(() => { span.style.opacity = '1' })
         const term = document.getElementById('terminal')
         term.scrollTop = term.scrollHeight
       }
