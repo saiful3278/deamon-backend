@@ -1,43 +1,23 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>WebCodecs Viewer <%= id %></title>
-    <style>
-      html, body { height: 100%; }
-      body { margin: 0; background: #0d0f14; color: #e7e9ee; font-family: monospace; }
-      .container { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; gap: 12px; padding: 12px; }
-      #header { width: 100%; display: flex; flex-direction: column; gap: 6px; align-items: center; }
-      #controls { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-      #controls button { font-size: 16px; padding: 12px; border-radius: 10px; border: none; background: #2a7; color: #041; cursor: pointer; width: 100%; }
-      #controls button#stop { background: #e55; color: #210; }
-      #statusbar { display:flex; gap:8px; align-items:center; font-size:13px; opacity:.9; }
-      #statusbar .dot { width:10px; height:10px; border-radius:50%; background:#e55353; }
-      #statusbar .dot.ok { background:#39d98a; }
-      #stats { font-size:12px; opacity:.8; }
-      #error { width: 100%; max-width: 720px; color: #210; background: #e55; border-radius: 8px; padding: 8px 10px; display: none; }
-      canvas { width: min(96vw, 720px); max-width: 720px; aspect-ratio: 9 / 16; background: #000; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
-      #log { width: min(96vw, 720px); max-height: 30vh; overflow: auto; font-size: 12px; background: #111; border-radius: 10px; padding: 8px 10px; opacity: .9; }
-      @media (orientation: landscape) {
-        canvas { width: min(94vw, 1280px, 85vh); aspect-ratio: 16 / 9; }
-        #log { width: min(94vw, 1280px, 85vh); }
-      }
-    </style>
+    <%- include('partials/layout') %>
   </head>
   <body>
     <div class="container">
       <div id="header">
         <div id="statusbar"><span class="dot" id="wsdot"></span><span>Viewer <%= id %></span><span id="status">Disconnected</span></div>
-        <div id="controls">
-          <button id="start">Start Stream</button>
-          <button id="stop">Stop Stream</button>
+        <%- include('partials/controls') %>
+        <div class="controls-row">
+          <button class="btn" id="start">Start Stream</button>
+          <button class="btn danger" id="stop">Stop Stream</button>
         </div>
         <div id="stats"></div>
         <div id="error"></div>
       </div>
-      <canvas id="canvas"></canvas>
-      <div id="log"></div>
+      <canvas id="canvas" class="viewer"></canvas>
+      <div id="log" class="log"></div>
     </div>
     <script>
       const id = '<%= id %>'
@@ -306,6 +286,11 @@
         log('stop clicked')
         fetch('/device/'+id+'/stop', { method:'POST' }).catch(e=>log('stop error ' + e.message))
       }
+
+      function modeProvider(m){
+        if (m === 'fmp4') location.href = '/view/'+id
+      }
+      window.initControls && window.initControls({ ws, canvas, id, modeProvider })
 
       // Input Handling
       function sendTouch(action, e) {

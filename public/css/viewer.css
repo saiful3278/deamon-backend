@@ -1,0 +1,36 @@
+:root {
+  --bg: #0d0f14;
+  --fg: #e7e9ee;
+  --panel: #12151c;
+  --accent: #27a37a;
+  --accent-2: #2787a3;
+  --danger: #e55353;
+  --muted: #7b8191;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+  --radius: 14px;
+}
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); }
+.container { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; min-height:100dvh; gap:12px; padding:12px; padding-top: calc(12px + env(safe-area-inset-top)); padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+.toolbar { position: sticky; top: 0; z-index: 10; width: min(96vw, 1280px); display:flex; justify-content:space-between; align-items:center; gap:8px; background: var(--panel); padding:8px 12px; border-radius: 10px; box-shadow: var(--shadow); }
+.toolbar .left, .toolbar .right { display:flex; gap:8px; align-items:center; flex-wrap: wrap; }
+.btn { font-size:14px; padding:10px 12px; border-radius:10px; border:none; background: var(--accent); color:#041; cursor:pointer; }
+.btn.primary { background: var(--accent-2); color:#041; }
+.btn.danger { background: var(--danger); color:#210; }
+.select { font-size:14px; padding:8px; border-radius:10px; background: #0b0e13; color: var(--fg); border: 1px solid #1c2029; }
+#statusbar { display:flex; gap:8px; align-items:center; font-size:13px; opacity:.9; }
+#statusbar .dot { width:10px; height:10px; border-radius:50%; background: var(--danger); }
+#statusbar .dot.ok { background:#39d98a; }
+#error { width:min(96vw, 720px); color:#210; background: var(--danger); border-radius:8px; padding:8px 10px; display:none; }
+canvas.viewer { width:min(96vw, 720px); max-width:720px; aspect-ratio: 9 / 16; background:#000; border-radius: var(--radius); box-shadow: var(--shadow); touch-action: none; }
+#stats, #diag { width:min(96vw, 1280px); font-size:12px; opacity:.85; }
+.log { width:min(96vw, 720px); max-height:30vh; overflow:auto; font-size:12px; background:#111; border-radius:10px; padding:8px 10px; opacity:.9; }
+.hidden { display:none !important; }
+@media (max-width: 640px) {
+  .toolbar { width: 100%; gap: 6px; }
+  .btn, .select { font-size:13px; padding:9px 10px; }
+}
+@media (orientation: landscape) {
+  canvas.viewer { width: min(94vw, 1280px, 85vh); aspect-ratio: 16 / 9; }
+  .log, #diag, #stats { width: min(94vw, 1280px, 85vh); }
+}
