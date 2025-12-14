@@ -28,6 +28,69 @@
       </div>
       
       <div id="log" class="log-panel"></div>
+      
+      <style>
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center; backdrop-filter: blur(5px); }
+        .modal-box { background:#1e1e1e; padding:25px; border-radius:12px; width:400px; color:#e0e0e0; box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .modal-title { margin-top:0; margin-bottom:20px; font-size:1.25rem; font-weight:600; color:#fff; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .setting-group { margin-bottom:20px; }
+        .setting-label { display:block; margin-bottom:8px; font-size:0.9rem; color:#aaa; font-weight: 500; }
+        .preset-container { display:flex; gap:8px; flex-wrap:wrap; }
+        .preset-btn { flex:1; padding:8px 12px; background:#2a2a2a; border:1px solid #444; color:#ccc; border-radius:6px; cursor:pointer; transition: all 0.2s; font-size: 0.9rem; text-align: center; }
+        .preset-btn:hover { background:#3a3a3a; border-color:#555; }
+        .preset-btn.active { background:#007bff; border-color:#007bff; color:#fff; font-weight: 600; }
+        .action-row { display:flex; justify-content:flex-end; gap:12px; margin-top:25px; pt: 15px; border-top: 1px solid #333; }
+        .btn-modal { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: opacity 0.2s; }
+        .btn-cancel { background: transparent; color: #aaa; }
+        .btn-cancel:hover { color: #fff; background: #333; }
+        .btn-confirm { background: #007bff; color: white; }
+        .btn-confirm:hover { opacity: 0.9; }
+      </style>
+
+      <div id="settings-modal" class="modal-overlay">
+        <div class="modal-box">
+          <h3 class="modal-title">Stream Configuration</h3>
+          
+          <!-- Resolution -->
+          <div class="setting-group">
+            <label class="setting-label">Resolution</label>
+            <div class="preset-container" id="res-presets">
+              <div class="preset-btn" onclick="selectPreset('res', 480)">480p</div>
+              <div class="preset-btn active" onclick="selectPreset('res', 720)">720p</div>
+              <div class="preset-btn" onclick="selectPreset('res', 1080)">1080p</div>
+            </div>
+            <input type="hidden" id="val-res" value="720">
+          </div>
+
+          <!-- Bitrate -->
+          <div class="setting-group">
+            <label class="setting-label">Bitrate</label>
+            <div class="preset-container" id="bit-presets">
+              <div class="preset-btn" onclick="selectPreset('bit', 2000000)">2M</div>
+              <div class="preset-btn active" onclick="selectPreset('bit', 4000000)">4M</div>
+              <div class="preset-btn" onclick="selectPreset('bit', 8000000)">8M</div>
+              <div class="preset-btn" onclick="selectPreset('bit', 16000000)">16M</div>
+            </div>
+            <input type="hidden" id="val-bit" value="4000000">
+          </div>
+
+          <!-- FPS -->
+          <div class="setting-group">
+            <label class="setting-label">Frame Rate (FPS)</label>
+            <div class="preset-container" id="fps-presets">
+              <div class="preset-btn" onclick="selectPreset('fps', 30)">30</div>
+              <div class="preset-btn active" onclick="selectPreset('fps', 60)">60</div>
+            </div>
+            <input type="hidden" id="val-fps" value="60">
+          </div>
+
+          <div class="action-row">
+             <button class="btn-modal btn-cancel" onclick="closeSettings()">Cancel</button>
+             <button class="btn-modal btn-confirm" onclick="confirmStart()">Start Stream</button>
+          </div>
+        </div>
+      </div>
+
     </div>
     <script>
       const id = '<%= id %>'
@@ -287,8 +350,35 @@
       ws.addEventListener('error', (e) => { log('ws error ' + e.message) })
 
       document.getElementById('start').onclick = () => {
-        log('start clicked')
-        fetch('/device/'+id+'/start', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({}) }).catch(e=>log('start error ' + e.message))
+        // Show settings modal
+        document.getElementById('settings-modal').style.display = 'flex'
+      }
+
+      function selectPreset(type, val) {
+        document.getElementById('val-'+type).value = val
+        const container = document.getElementById(type+'-presets')
+        const btns = container.getElementsByClassName('preset-btn')
+        for(let b of btns) b.classList.remove('active')
+        if (window.event && window.event.currentTarget) {
+          window.event.currentTarget.classList.add('active')
+        }
+      }
+
+      function closeSettings() {
+        document.getElementById('settings-modal').style.display = 'none'
+      }
+
+      function confirmStart() {
+        closeSettings()
+        const size = parseInt(document.getElementById('val-res').value) || 720
+        const bitrate = parseInt(document.getElementById('val-bit').value) || 4000000
+        const fps = parseInt(document.getElementById('val-fps').value) || 60
+        log('starting with size='+size+' bitrate='+bitrate+' fps='+fps)
+        fetch('/device/'+id+'/start', { 
+            method:'POST', 
+            headers:{'Content-Type':'application/json'}, 
+            body: JSON.stringify({ maxSize: size, bitrate: bitrate, maxFps: fps }) 
+        }).catch(e=>log('start error ' + e.message))
       }
       
       document.getElementById('stop').onclick = () => {
