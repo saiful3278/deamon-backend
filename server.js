@@ -183,7 +183,7 @@ wss.on('connection', (ws) => {
         return
       }
       // demux: 1 byte channel + 4 byte length + payload
-      const buf = Buffer.from(data)
+      const buf = (Buffer.isBuffer(data)) ? data : Buffer.from(data)
       if (buf.length < 5) return
       const channel = buf.readUInt8(0)
       const length = buf.readUInt32BE(1)
@@ -237,7 +237,15 @@ wss.on('connection', (ws) => {
 })
 
 function safeSend(ws, data, isBinary = true) {
-  try { ws.send(data, { binary: isBinary }) } catch (e) {}
+  try {
+    if (ws.readyState === 1) { // OPEN
+      if (ws.bufferedAmount > 512 * 1024) { // Drop if > 512KB buffered
+         // Optionally log drop
+         return
+      }
+      ws.send(data, { binary: isBinary })
+    }
+  } catch (e) {}
 }
 
 function findLocalFfmpeg(){
@@ -281,8 +289,7 @@ function createMux(id) {
     '-pix_fmt','yuv420p',
     '-x264-params','keyint=30:min-keyint=30:scenecut=0',
     '-muxdelay','0','-muxpreload','0',
-    '-movflags','empty_moov+default_base_moof+frag_discont',
-    '-frag_duration','250000',
+    '-movflags','empty_moov+default_base_moof+frag_keyframe',
     '-f','mp4','pipe:1'
   ] : [
     '-loglevel','error',
@@ -293,8 +300,7 @@ function createMux(id) {
     '-f','h264','-i','pipe:0',
     '-c','copy',
     '-muxdelay','0','-muxpreload','0',
-    '-movflags','empty_moov+default_base_moof+frag_discont',
-    '-frag_duration','300000',
+    '-movflags','empty_moov+default_base_moof+frag_keyframe',
     '-f','mp4','pipe:1'
   ]
   let proc

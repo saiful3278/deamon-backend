@@ -266,9 +266,25 @@
         return out
       }
 
+      const startModal = document.getElementById('startModal')
       document.getElementById('start').onclick = () => {
-        log('start clicked')
-        fetch('/device/'+id+'/start', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({}) }).catch(e=>log('start error ' + e.message))
+        startModal.style.display = 'flex'
+      }
+      document.getElementById('cancelStart').onclick = () => {
+        startModal.style.display = 'none'
+      }
+      document.getElementById('confirmStart').onclick = () => {
+        const bitrate = parseInt(document.getElementById('startBitrate').value) || 4000000
+        const maxSize = parseInt(document.getElementById('startMaxSize').value) || 1080
+        const maxFps = parseInt(document.getElementById('startFps').value) || 60
+        const audio = document.getElementById('startAudio').checked
+        log('start with ' + JSON.stringify({ bitrate, maxSize, maxFps, audio }))
+        fetch('/device/'+id+'/start', { 
+            method:'POST', 
+            headers:{'Content-Type':'application/json'}, 
+            body: JSON.stringify({ bitrate, maxSize, maxFps, audio }) 
+        }).catch(e=>log('start error ' + e.message))
+        startModal.style.display = 'none'
       }
 
       document.getElementById('stop').onclick = () => {
@@ -494,5 +510,34 @@
         mediaSource.addEventListener('sourceopen', () => { msOpened = true; log('media source open') })
       }
     </script>
+    <div id="startModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center;">
+      <div style="background:#1a1f29; padding:20px; border-radius:12px; width:300px; display:flex; flex-direction:column; gap:12px; border:1px solid #333; box-shadow:0 10px 40px rgba(0,0,0,0.5); color:#fff;">
+        <h3 style="margin:0; font-size:18px;">Start Stream</h3>
+        
+        <label style="font-size:13px; display:flex; flex-direction:column; gap:4px;">
+          Bitrate (bps)
+          <input type="number" id="startBitrate" value="4000000" step="500000" style="background:#111; border:1px solid #333; color:#fff; padding:6px; border-radius:4px;">
+        </label>
+    
+        <label style="font-size:13px; display:flex; flex-direction:column; gap:4px;">
+          Max Size (px)
+          <input type="number" id="startMaxSize" value="1080" step="10" style="background:#111; border:1px solid #333; color:#fff; padding:6px; border-radius:4px;">
+        </label>
+    
+        <label style="font-size:13px; display:flex; flex-direction:column; gap:4px;">
+          Max FPS
+          <input type="number" id="startFps" value="60" step="5" style="background:#111; border:1px solid #333; color:#fff; padding:6px; border-radius:4px;">
+        </label>
+    
+        <label style="font-size:13px; display:flex; gap:8px; align-items:center;">
+          <input type="checkbox" id="startAudio"> Enable Audio
+        </label>
+    
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button id="cancelStart" style="flex:1; background:#333; color:#aaa; border:none; padding:8px; border-radius:4px; cursor:pointer;">Cancel</button>
+          <button id="confirmStart" style="flex:1; background:#2a7; color:#fff; border:none; padding:8px; border-radius:4px; cursor:pointer;">Start</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
