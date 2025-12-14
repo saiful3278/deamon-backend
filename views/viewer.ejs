@@ -7,20 +7,28 @@
   <body>
     <div class="container">
       <div id="header">
-        <div id="statusbar"><span class="dot" id="wsdot"></span><span>Viewer <%= id %></span><span id="status">Disconnected</span></div>
+        <div class="status-bar">
+          <div class="status-left">
+            <span class="dot" id="wsdot"></span>
+            <span><%= id %></span>
+            <span id="status">Disconnected</span>
+          </div>
+          <div id="diag" style="display:none"></div>
+        </div>
         <%- include('partials/controls') %>
-        <div id="diag"></div>
-        <div id="stats"></div>
-        <div id="error"></div>
-      </div>
-      <div class="grid">
-        <div class="controls-row">
-          <button class="btn" id="start">Start Stream</button>
-          <button class="btn danger" id="stop">Stop Stream</button>
+        <div class="stream-controls">
+          <button class="btn" id="start">Start</button>
+          <button class="btn" id="stop">Stop</button>
         </div>
       </div>
-      <canvas id="canvas" class="viewer"></canvas>
-      <div id="log" class="log"></div>
+      
+      <div class="stream-box">
+        <canvas id="canvas" class="viewer"></canvas>
+        <div id="stats" class="overlay-stats"></div>
+        <div id="error" class="overlay-error"></div>
+      </div>
+      
+      <div id="log" class="log-panel"></div>
     </div>
     <script>
       const id = '<%= id %>'
@@ -275,11 +283,34 @@
       window.initControls && window.initControls({ ws, canvas, id, modeProvider, videoEl })
 
       // Input Handling
+      // Removed manual sendTouch/KeyMap as it is now in controls.js?
+      // Wait, controls.js only handles the Toolbar. The actual canvas touch interactions were in viewer.ejs.
+      // I should NOT remove sendTouch/KeyMap unless controls.js handles it.
+      // controls.js handles toolbar clicks. It does NOT handle canvas touch forwarding (except blocking default).
+      // I must keep sendTouch here or move it.
+      // The user complained "none of the buttons are working".
+      // Let's keep sendTouch here but verify if controls.js conflicts.
+      // controls.js does `canvas.addEventListener('touchstart', ... {passive:false})`.
+      // The manual implementation uses `mousedown`.
+      // I should ensure touch events are also forwarded if the user is on mobile.
+      
+      // Let's add touch support for canvas here since controls.js only prevents default.
+      
       function sendTouch(action, e) {
         if (ws.readyState !== WebSocket.OPEN) return
         const rect = canvas.getBoundingClientRect()
-        const ratioX = (e.clientX - rect.left) / rect.width
-        const ratioY = (e.clientY - rect.top) / rect.height
+        // Support both MouseEvent and Touch
+        let cx, cy;
+        if (e.touches && e.touches.length > 0) {
+            cx = e.touches[0].clientX
+            cy = e.touches[0].clientY
+        } else {
+            cx = e.clientX
+            cy = e.clientY
+        }
+        
+        const ratioX = (cx - rect.left) / rect.width
+        const ratioY = (cy - rect.top) / rect.height
         const w = canvas.width
         const h = canvas.height
         const x = Math.round(ratioX * w)
@@ -300,6 +331,7 @@
         ws.send(buf)
       }
 
+      // Mouse
       canvas.addEventListener('mousedown', (e) => {
         sendTouch(0, e) // DOWN
         const onMove = (ev) => sendTouch(2, ev) // MOVE
@@ -312,6 +344,18 @@
         document.addEventListener('mouseup', onUp)
       })
       
+      // Touch - Add this for mobile support!
+      canvas.addEventListener('touchstart', (e) => {
+          // controls.js calls preventDefault, so we are good to go
+          sendTouch(0, e)
+      }, {passive: false})
+      canvas.addEventListener('touchmove', (e) => {
+          sendTouch(2, e)
+      }, {passive: false})
+      canvas.addEventListener('touchend', (e) => {
+          sendTouch(1, e) // UP
+      }, {passive: false})
+
       // Prevent context menu on right click
       canvas.addEventListener('contextmenu', (e) => { e.preventDefault() })
 

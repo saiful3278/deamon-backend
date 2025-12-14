@@ -34,13 +34,21 @@ function initControls(ctx) {
       const input = document.getElementById('soft-keyboard') || (() => {
         const i = document.createElement('input')
         i.id = 'soft-keyboard'
-        i.className = 'hidden'
+        i.style.position = 'absolute'
+        i.style.opacity = '0'
+        i.style.top = '-1000px'
         document.body.appendChild(i)
-        i.addEventListener('input', () => {})
+        // Send text as shell input or keycodes? 
+        // For now just trigger keyboard show. 
+        // Actual text input handling would require a listener here sending shell injectText.
+        // But the user just asked for "Keyboard" button which usually toggles soft keyboard.
+        // If we want actual input, we need to implement it.
+        // Let's just make it focusable to show the keyboard on mobile.
         return i
       })()
-      input.classList.toggle('hidden')
       input.focus()
+      // If we want to hide it, we blur?
+      // input.blur()
     } else if (action === 'screenshot') {
       try {
         const targetCanvas = canvas

@@ -1,25 +1,29 @@
 <div class="toolbar">
-  <div class="left">
-    <button class="btn" data-action="back">Back</button>
-    <button class="btn" data-action="home">Home</button>
-    <button class="btn" data-action="recents">Recents</button>
-    <button class="btn" data-action="power">Power</button>
-    <button class="btn" data-action="vol-down">Vol −</button>
-    <button class="btn" data-action="vol-up">Vol +</button>
+  <div class="group">
+    <button class="btn" data-action="back" title="Back">◀</button>
+    <button class="btn" data-action="home" title="Home">●</button>
+    <button class="btn" data-action="recents" title="Recents">■</button>
   </div>
-  <div class="right">
-    <button class="btn" data-action="fullscreen">Fullscreen</button>
-    <button class="btn" data-action="rotate">Rotate</button>
-    <button class="btn" data-action="keyboard">Keyboard</button>
-    <select class="select" data-action="quality">
-      <option value="480">480p</option>
-      <option value="720" selected>720p</option>
-      <option value="1080">1080p</option>
+  <div class="group">
+    <button class="btn" data-action="vol-down" title="Vol -">🔉</button>
+    <button class="btn" data-action="vol-up" title="Vol +">🔊</button>
+    <button class="btn" data-action="power" title="Power">⚡</button>
+  </div>
+  <div class="group">
+    <button class="btn" data-action="rotate" title="Rotate">↻</button>
+    <button class="btn" data-action="keyboard" title="Keyboard">⌨</button>
+    <button class="btn" data-action="fullscreen" title="Fullscreen">⛶</button>
+    <button class="btn primary" data-action="screenshot" title="Screenshot">📸</button>
+  </div>
+  <div class="group">
+    <select class="select" data-action="quality" title="Quality">
+      <option value="480">SD</option>
+      <option value="720" selected>HD</option>
+      <option value="1080">FHD</option>
     </select>
-    <select class="select" data-action="mode">
-      <option value="fmp4">fMP4</option>
-      <option value="annexb">AnnexB</option>
+    <select class="select" data-action="mode" title="Mode">
+      <option value="fmp4">MP4</option>
+      <option value="annexb">H264</option>
     </select>
-    <button class="btn primary" data-action="screenshot">Screenshot</button>
   </div>
 </div>

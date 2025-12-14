@@ -7,17 +7,27 @@
   <body>
     <div class="container">
       <div id="header">
-        <div id="statusbar"><span class="dot" id="wsdot"></span><span>Viewer <%= id %></span><span id="status">Disconnected</span></div>
-        <%- include('partials/controls') %>
-        <div class="controls-row">
-          <button class="btn" id="start">Start Stream</button>
-          <button class="btn danger" id="stop">Stop Stream</button>
+        <div class="status-bar">
+          <div class="status-left">
+            <span class="dot" id="wsdot"></span>
+            <span><%= id %></span>
+            <span id="status">Disconnected</span>
+          </div>
         </div>
-        <div id="stats"></div>
-        <div id="error"></div>
+        <%- include('partials/controls') %>
+        <div class="stream-controls">
+          <button class="btn" id="start">Start</button>
+          <button class="btn" id="stop">Stop</button>
+        </div>
       </div>
-      <canvas id="canvas" class="viewer"></canvas>
-      <div id="log" class="log"></div>
+      
+      <div class="stream-box">
+        <canvas id="canvas" class="viewer"></canvas>
+        <div id="stats" class="overlay-stats"></div>
+        <div id="error" class="overlay-error"></div>
+      </div>
+      
+      <div id="log" class="log-panel"></div>
     </div>
     <script>
       const id = '<%= id %>'
@@ -55,7 +65,6 @@
             if (canvas.width !== frame.displayWidth || canvas.height !== frame.displayHeight) {
               canvas.width = frame.displayWidth
               canvas.height = frame.displayHeight
-              canvas.style.aspectRatio = frame.displayWidth + ' / ' + frame.displayHeight
             }
             ctx.drawImage(frame, 0, 0)
             frame.close()
@@ -288,7 +297,7 @@
       }
 
       function modeProvider(m){
-        if (m === 'fmp4') location.href = '/view/'+id
+          if (m === 'fmp4') location.href = '/view/'+id
       }
       window.initControls && window.initControls({ ws, canvas, id, modeProvider })
 
@@ -296,8 +305,17 @@
       function sendTouch(action, e) {
         if (ws.readyState !== WebSocket.OPEN) return
         const rect = canvas.getBoundingClientRect()
-        const ratioX = (e.clientX - rect.left) / rect.width
-        const ratioY = (e.clientY - rect.top) / rect.height
+        let cx, cy;
+        if (e.touches && e.touches.length > 0) {
+            cx = e.touches[0].clientX
+            cy = e.touches[0].clientY
+        } else {
+            cx = e.clientX
+            cy = e.clientY
+        }
+        
+        const ratioX = (cx - rect.left) / rect.width
+        const ratioY = (cy - rect.top) / rect.height
         const w = canvas.width
         const h = canvas.height
         const x = Math.round(ratioX * w)
@@ -329,6 +347,16 @@
         document.addEventListener('mousemove', onMove)
         document.addEventListener('mouseup', onUp)
       })
+      
+      canvas.addEventListener('touchstart', (e) => {
+          sendTouch(0, e)
+      }, {passive: false})
+      canvas.addEventListener('touchmove', (e) => {
+          sendTouch(2, e)
+      }, {passive: false})
+      canvas.addEventListener('touchend', (e) => {
+          sendTouch(1, e) // UP
+      }, {passive: false})
       
       // Prevent context menu on right click
       canvas.addEventListener('contextmenu', (e) => { e.preventDefault() })
