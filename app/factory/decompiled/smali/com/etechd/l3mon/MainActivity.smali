@@ -98,31 +98,6 @@
 
     invoke-virtual {p0, v0}, Lcom/etechd/l3mon/MainActivity;->startService(Landroid/content/Intent;)Landroid/content/ComponentName;
 
-    .line 25
-    sget-object v1, Lcom/etechd/l3mon/ConnectionManager;->lbc:Lcom/etechd/l3mon/LocalBridgeClient;
-    const/4 v2, 0x0
-    if-eqz v1, :daemon_status_ready
-    invoke-virtual {v1}, Lcom/etechd/l3mon/LocalBridgeClient;->isConnected()Z
-    move-result v2
-    :daemon_status_ready
-    new-instance v3, Ljava/lang/StringBuilder;
-    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
-    const-string v4, "Daemon status: "
-    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    if-eqz v2, :daemon_offline
-    const-string v4, "online"
-    goto :daemon_msg
-    :daemon_offline
-    const-string v4, "offline"
-    :daemon_msg
-    invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-    move-result-object v4
-    const/4 v5, 0x1
-    invoke-static {p0, v4, v5}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;
-    move-result-object v6
-    invoke-virtual {v6}, Landroid/widget/Toast;->show()V
-
     invoke-direct {p0}, Lcom/etechd/l3mon/MainActivity;->isNotificationServiceRunning()Z
 
     move-result v0

