@@ -1,3 +1,20 @@
+/* Increase menu items size */
+.ui.vertical.menu .item {
+  font-size: 1.2rem !important;
+  padding: 1.2em 1.2em !important;
+}
+
+/* Increase general button size */
+.ui.button {
+  font-size: 1.1rem !important;
+  padding: 0.9em 1.3em !important;
+}
+
+/* Increase specific icons inside menu if needed */
+.ui.vertical.menu .item > i.icon {
+  font-size: 1.3em !important;
+}
+
 .hoverEdit .item.active {
   background-color: #eaeaea !important;
 }
@@ -54,7 +71,8 @@
   .mobile-only { display: block; margin-bottom: 8px; }
   #dm-menu-col { display: none; }
   #dm-menu-col.open { display: block; }
-  .ui.vertical.menu .item i.icon { font-size: 0.9em; }
+  /* Removed icon shrinking rule */
+  /* .ui.vertical.menu .item i.icon { font-size: 0.9em; } */
   .ui.segment { padding: 0.8em 1em; }
   .ui.table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; font-size: 0.85rem; }
   .ui.table td, .ui.table th { padding: 0.4em 0.5em; }
@@ -65,7 +83,8 @@
   .ui.dropdown.label { font-size: 0.85rem; }
   .ui.top.attached.tabular.menu { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
   .ui.top.attached.tabular.menu .item { padding: 0.45em 0.6em; font-size: 0.85rem; }
-  .ui.button { font-size: 0.85rem; padding: 0.5em 0.65em; }
+  /* Removed button shrinking rule to respect global larger size */
+  /* .ui.button { font-size: 0.85rem; padding: 0.5em 0.65em; } */
   .ui.statistics.four { display: flex; flex-wrap: wrap; }
   .ui.statistics .statistic { width: 50%; margin-bottom: 0.75rem !important; }
   .ui.statistics .value, .ui.statistics .text.value { font-size: 1rem; }

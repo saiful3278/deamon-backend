@@ -48,6 +48,17 @@ if(pageData.length !== 0) {
         var currentLocationMarker = L.marker([<%= latest.latitude %>, <%= latest.longitude %>]).addTo(GPS_NOW_MAP);
 
         currentLocationMarker.bindPopup("<b>Time:</b> <%= new Date(latest.time).toLocaleString('en-GB', { timeZone: 'UTC' }) %><br><b>speed:</b> <%= latest.speed.toFixed(2) %>mph<br><b>Accuracy:</b> <%= latest.accuracy.toFixed(2) %>m");
+
+        var gpsHistoryData = <%- JSON.stringify(pageData) %>;
+        if (gpsHistoryData && gpsHistoryData.length) {
+            var latLngs = gpsHistoryData
+                .filter(function(p) { return p.latitude !== undefined && p.longitude !== undefined; })
+                .map(function(p) { return [p.latitude, p.longitude]; });
+            
+            if (latLngs.length > 0) {
+                L.polyline(latLngs, {color: '#6781f8', weight: 3}).addTo(GPS_NOW_MAP);
+            }
+        }
     </script>
 </div>
 

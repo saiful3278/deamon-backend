@@ -121,18 +121,4 @@ routes.post('/manage/:deviceid/GPSPOLL/:speed', isAllowed, (req, res) => {
     });
 });
 
-routes.post('/manage/:deviceid/SCREENPREVIEW/:action', isAllowed, (req, res) => {
-    const action = req.params.action;
-    if (action === 'start') {
-        clientManager.screenshotPoll(req.params.deviceid);
-        res.json({ error: false });
-    } else if (action === 'stop') {
-        if (clientManager.gpsPollers[req.params.deviceid]) {
-            clearInterval(clientManager.gpsPollers[req.params.deviceid]);
-            delete clientManager.gpsPollers[req.params.deviceid];
-        }
-        res.json({ error: false });
-    } else res.json({ error: 'Unknown action' });
-});
-
 module.exports = routes;

