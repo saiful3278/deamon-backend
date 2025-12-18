@@ -15,20 +15,23 @@ function showNotification(backgroundColor, text) {
 function updateButton(element, commandID, additionalParams = {}) {
     $(element).addClass('loading');
     sendCommand(commandID, additionalParams, (error, message) => {
-        // ok, yes, i'm adding 'fake' delay, it just makes the front end nicer, okay!?
         if (error) {
             setTimeout(() => {
                 showNotification('#f03434', error)
                 $(element).removeClass('loading')
             }, 300)
         } else {
+            // Increased timeout to 4000ms (4 seconds) to allow device time to process request
             setTimeout(() => {
-                showNotification('#2ecc71', message);
-                $(element).removeClass('loading');
-                if (message === 'Requested') {
-                    const cmd = commandID;
-                    if (cmd !== '0xSP') setTimeout(() => { window.location = window.location }, 200)
-                }
+                showNotification('#2ecc71', 'Update Requested! Please wait...');
+                setTimeout(() => {
+                    showNotification('#2ecc71', message);
+                    $(element).removeClass('loading');
+                    if (message === 'Requested') {
+                        const cmd = commandID;
+                        if (cmd !== '0xSP') setTimeout(() => { window.location = window.location }, 200)
+                    }
+                }, 4000); 
             }, 300)
         }
     });

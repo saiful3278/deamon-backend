@@ -31,25 +31,46 @@ if(pageData.length !== 0) {
 
 <div class="ui bottom attached tab segment active" data-tab="now">
     <div id="GPS_NOW_MAP" style="width: 100%; height: 300px;"></div>
+    <div id="GPS_LATEST_META" data-lat="<%= latest.latitude %>" data-lng="<%= latest.longitude %>" data-time="<%= new Date(latest.time).toLocaleString('en-GB', { timeZone: 'UTC' }) %>" data-speed="<%= latest.speed %>" data-accuracy="<%= latest.accuracy %>" style="display:none"></div>
+    <script id="GPS_HISTORY_DATA_JSON" type="application/json"><%- JSON.stringify(pageData) %></script>
     <p style="text-align:center"><%= new Date(latest.time).toLocaleString('en-GB', { timeZone: 'UTC' }) %></p>
-    <button onclick="updateButton(this, '0xLO')" class="ui button fluid positive" type="submit">
+    <% if (latest.latitude === 0 && latest.longitude === 0) { %>
+        <div class="ui message warning">
+            <i class="exclamation triangle icon"></i>
+            Location appears to be (0,0). The device may not have a GPS lock yet.
+        </div>
+    <% } %>
+    <button onclick="updateGPS(this)" class="ui button fluid positive" type="submit">
         <i class="map marker alternate icon"></i>
         Request Update
     </button>
 
     <script>
-        var GPS_NOW_MAP = L.map('GPS_NOW_MAP').setView([<%= latest.latitude %>, <%= latest.longitude %>], 13);
+        var latestMeta = document.getElementById('GPS_LATEST_META');
+        var latestLat = parseFloat(latestMeta ? latestMeta.dataset.lat : '0') || 0;
+        var latestLng = parseFloat(latestMeta ? latestMeta.dataset.lng : '0') || 0;
+        var latestTimeStr = latestMeta ? (latestMeta.dataset.time || '') : '';
+        var latestSpeed = parseFloat(latestMeta ? latestMeta.dataset.speed : '0') || 0;
+        var latestAccuracy = parseFloat(latestMeta ? latestMeta.dataset.accuracy : '0') || 0;
+
+        var GPS_NOW_MAP = L.map('GPS_NOW_MAP').setView([latestLat, latestLng], 13);
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
             maxZoom: 19
         }).addTo(GPS_NOW_MAP);
-        var currentLocationMarker = L.marker([<%= latest.latitude %>, <%= latest.longitude %>]).addTo(GPS_NOW_MAP);
+        var currentLocationMarker = L.marker([latestLat, latestLng]).addTo(GPS_NOW_MAP);
 
-        currentLocationMarker.bindPopup("<b>Time:</b> <%= new Date(latest.time).toLocaleString('en-GB', { timeZone: 'UTC' }) %><br><b>speed:</b> <%= latest.speed.toFixed(2) %>mph<br><b>Accuracy:</b> <%= latest.accuracy.toFixed(2) %>m");
+        currentLocationMarker.bindPopup("<b>Time:</b> " + latestTimeStr + "<br><b>speed:</b> " + latestSpeed.toFixed(2) + "mph<br><b>Accuracy:</b> " + latestAccuracy.toFixed(2) + "m");
 
-        var gpsHistoryData = <%- JSON.stringify(pageData) %>;
+        var gpsHistoryDataJsonEl = document.getElementById('GPS_HISTORY_DATA_JSON');
+        var gpsHistoryData = [];
+        try {
+            gpsHistoryData = JSON.parse(gpsHistoryDataJsonEl ? (gpsHistoryDataJsonEl.textContent || '[]') : '[]');
+        } catch (e) {
+            gpsHistoryData = [];
+        }
         if (gpsHistoryData && gpsHistoryData.length) {
             var latLngs = gpsHistoryData
                 .filter(function(p) { return p.latitude !== undefined && p.longitude !== undefined; })
@@ -57,6 +78,11 @@ if(pageData.length !== 0) {
             
             if (latLngs.length > 0) {
                 L.polyline(latLngs, {color: '#6781f8', weight: 3}).addTo(GPS_NOW_MAP);
+
+                if (latestLat === 0 && latestLng === 0) {
+                    var bounds = L.latLngBounds(latLngs);
+                    GPS_NOW_MAP.fitBounds(bounds);
+                }
             }
         }
     </script>
@@ -87,8 +113,10 @@ pageData.forEach((item) => {
 
 <div class="ui bottom attached tab segment" data-tab="log">
     <div id="GPS_LOG_MAP" style="width: 100%; height: 500px;"></div>
+    <div id="GPS_LOG_META" data-last-date="<%= Object.keys(sorted)[Object.keys(sorted).length -1] %>" style="display:none"></div>
+    <script id="GPS_SORTED_DATA_JSON" type="application/json"><%- JSON.stringify(sorted) %></script>
     <script>
-        var GPS_LOG_MAP = L.map('GPS_LOG_MAP').setView([<%= latest.latitude %>, <%= latest.longitude %>], 13);
+        var GPS_LOG_MAP = L.map('GPS_LOG_MAP').setView([latestLat, latestLng], 13);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
@@ -171,8 +199,30 @@ pageData.forEach((item) => {
         });
     }
 
-    var mapData = JSON.parse('<%- JSON.stringify(sorted) %>');
+    function updateGPS(btn) {
+        $(btn).addClass('loading');
+        $.post(baseURL + '/0xLO', function(data) {
+            if (data.error) {
+                showNotification('#f03434', data.error);
+                $(btn).removeClass('loading');
+            } else {
+                showNotification('#2ecc71', 'Request sent! Waiting 4s for device...');
+                setTimeout(() => {
+                    location.reload();
+                }, 4000);
+            }
+        });
+    }
 
+    var mapDataJsonEl = document.getElementById('GPS_SORTED_DATA_JSON');
+    var mapData = {};
+    try {
+        mapData = JSON.parse(mapDataJsonEl ? (mapDataJsonEl.textContent || '{}') : '{}');
+    } catch (e) {
+        mapData = {};
+    }
 
-    loadLogToMap('<%= Object.keys(sorted)[Object.keys(sorted).length -1] %>')
+    var logMeta = document.getElementById('GPS_LOG_META');
+    var lastDate = logMeta ? logMeta.dataset.lastDate : '';
+    if (lastDate && mapData[lastDate]) loadLogToMap(lastDate);
 </script>
