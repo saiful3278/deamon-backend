@@ -147,3 +147,127 @@
   .device-card { padding: 6px 8px; }
   .dc-id .dc-name { font-weight: 600; }
 }
+
+/* Dark Mode Overrides */
+body.dark-mode {
+    background-color: #1b1c1d;
+    color: #e0e0e0;
+}
+
+body.dark-mode .ui.menu {
+    background-color: #262729;
+    border: 1px solid #333;
+}
+
+body.dark-mode .ui.secondary.menu .item {
+    color: #ccc;
+}
+
+body.dark-mode .ui.secondary.menu .item.active {
+    color: #fff;
+    background-color: #333;
+}
+
+body.dark-mode .ui.segment {
+    background-color: #262729;
+    color: #e0e0e0;
+    border: 1px solid #333;
+}
+
+body.dark-mode .ui.table {
+    background-color: #262729;
+    color: #e0e0e0;
+    border: 1px solid #333;
+}
+
+body.dark-mode .ui.table thead th {
+    background-color: #333;
+    color: #fff;
+    border-bottom: 1px solid #444;
+}
+
+body.dark-mode .ui.card, 
+body.dark-mode .ui.cards > .card {
+    background-color: #262729;
+    box-shadow: 0 1px 3px 0 #000, 0 0 0 1px #333;
+}
+
+body.dark-mode .ui.header {
+    color: #e0e0e0;
+}
+
+body.dark-mode .ui.item.menu, 
+body.dark-mode .ui.vertical.menu {
+    background-color: #262729;
+    border: 1px solid #333;
+}
+
+body.dark-mode .ui.vertical.menu .item {
+    color: #ccc;
+}
+
+body.dark-mode .hoverEdit .item:hover {
+    background-color: #333 !important;
+    border-color: #444 !important;
+}
+
+body.dark-mode .ui.divider {
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #444;
+}
+
+body.dark-mode .ui.secondary.menu .item:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-mode .ui.form input,
+body.dark-mode .ui.form textarea,
+body.dark-mode .ui.input input {
+    background-color: #262729;
+    color: #fff;
+    border-color: #444;
+}
+
+body.dark-mode .ui.form input:focus,
+body.dark-mode .ui.form textarea:focus,
+body.dark-mode .ui.input input:focus {
+    background-color: #333;
+    border-color: #6781f8;
+}
+
+body.dark-mode .ui.modal {
+    background-color: #262729;
+}
+
+body.dark-mode .ui.modal > .header,
+body.dark-mode .ui.modal > .content,
+body.dark-mode .ui.modal > .actions {
+    background-color: #262729;
+    color: #e0e0e0;
+}
+
+
+/* Dark Mode Map Tiles */
+body.dark-mode .leaflet-tile-pane {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
+
+/* Dark Mode Device Cards */
+body.dark-mode .device-card {
+    background-color: #262729;
+    border: 1px solid #333;
+}
+
+body.dark-mode .dc-device,
+body.dark-mode .dc-ip,
+body.dark-mode .dc-last,
+body.dark-mode .device-cell .sub.header {
+    color: #b0b0b0;
+}
+
+body.dark-mode .dc-id .dc-name {
+    color: #e0e0e0;
+}
+

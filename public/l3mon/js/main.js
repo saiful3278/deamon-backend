@@ -36,3 +36,32 @@ function updateButton(element, commandID, additionalParams = {}) {
         }
     });
 }
+
+// Theme Management
+$(document).ready(function() {
+    // Check local storage for theme preference
+    const savedTheme = localStorage.getItem('theme');
+    const isDark = savedTheme === 'dark';
+    
+    if (isDark) {
+        $('body').addClass('dark-mode');
+        $('#theme-toggle i').removeClass('moon').addClass('sun');
+    }
+
+    // Toggle theme on click
+    $('#theme-toggle').on('click', function(e) {
+        e.preventDefault();
+        const body = $('body');
+        body.toggleClass('dark-mode');
+        
+        const isNowDark = body.hasClass('dark-mode');
+        localStorage.setItem('theme', isNowDark ? 'dark' : 'light');
+        
+        const icon = $(this).find('i');
+        if (isNowDark) {
+            icon.removeClass('moon').addClass('sun');
+        } else {
+            icon.removeClass('sun').addClass('moon');
+        }
+    });
+});
